@@ -4,6 +4,7 @@
 import pandas as pd
 import pandas_datareader as web
 import datetime
+import numpy as np
 
 class Stock_Correlations(object):
 
@@ -16,25 +17,32 @@ class Stock_Correlations(object):
         self.measure = str(measure)
 
     def get_data(self):
-        #Get all data associated with input stocks
+        #Get data associated with input stocks for variable in time period
         data_arrays = {}
         for stock in self.symb:
-            stock_data = web.DataReader(stock, "quandl", start,end)
-            stock_data.index.name = 'Date'
-            stock_data.reset_index(inplace=True)
-            pd.to_datetime(stock_data['Date'])
-            data_arrays[stock] = stock_data
-            return
-
-    def filter_data(self):
-        #Filter data by time period and variable of interest
-
+            stock_data = web.DataReader(stock, "quandl", self.time_start,self.time_end)
+            data_arrays[stock] = stock_data[self.variable]
+        df = pd.DataFrame(data_arrays)
+        return df
 
     def correlation_matrix(self):
         #Create correlation matrix for stocks
+        return
 
     def measure_distance(self):
         #Calculate pairwise distance between stocks
+        return
 
     def visualize_network(self):
         #Visualize the network of stocks
+        return
+#test
+sym = ['LCNB', 'GEF']
+start = '2017-05-04'
+end = '2017-06-04'
+var = 'Volume'
+mes = 10
+
+k = Stock_Correlations(sym,start,end,var,mes)
+q = k.get_data()
+print q
