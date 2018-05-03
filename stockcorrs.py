@@ -5,44 +5,64 @@ import pandas as pd
 import pandas_datareader as web
 import datetime
 import numpy as np
+import networkx as nx
+from matplotlib import pyplot as plt
+
 
 class Stock_Correlations(object):
 
-    def __init__(self, symb, time_start, time_end, variable, measure):
+    def __init__(self, symb, time_start, time_end, variable, measure, threshold):
 
         self.symb = symb
         self.time_start = pd.to_datetime(time_start)
         self.time_end = pd.to_datetime(time_end)
         self.variable = str(variable)
         self.measure = str(measure)
+        self.threshold = float(threshold)
 
     def get_data(self):
         #Get data associated with input stocks for variable in time period
         data_arrays = {}
         for stock in self.symb:
-            stock_data = web.DataReader(stock, "quandl", self.time_start,self.time_end)
+            stock_data = web.DataReader(stock, "iex", self.time_start,self.time_end)
             data_arrays[stock] = stock_data[self.variable]
         df = pd.DataFrame(data_arrays)
         return df
 
-    def correlation_matrix(self):
+    def correlation_matrix(self,df):
         #Create correlation matrix for stocks
-        return
 
-    def measure_distance(self):
-        #Calculate pairwise distance between stocks
-        return
+        cor = df.corr(method='spearman')
+        return cor
 
-    def visualize_network(self):
-        #Visualize the network of stocks
+    def create_graph(self, cor):
+        #Create graph using correlation matrix
+
+        stacks = cor.stack().reset_index()
+        stacks.columns = ['s1','s2','corr']
+        stacks = stacks.loc[(stacks['corr'] > self.threshold) & (stacks['s1'] != stacks['s2'])]
+        g = nx.from_pandas_edgelist(stacks, 's1','s2')
+        nx.draw(g, with_labels = True, node_color='blue', node_size=400, edge_color='black', linewidths=1, font_size=12)
+        plt.show()
+        return stacks
+
+    def minimum_spanning_tree(self):
+        #Create minimum spanning tree using graph
         return
 #test
-sym = ['LCNB', 'GEF']
+
+with open("stockslist.txt", 'r') as s:
+    p = s.readlines()
+arr = p[0].split('\r')
+
+
 start = '2017-05-04'
 end = '2017-06-04'
-var = 'Volume'
+var = 'volume'
 mes = 10
-
-k = Stock_Correlations(sym,start,end,var,mes)
+t=0.2
+k = Stock_Correlations(arr,start,end,var,mes,t)
 q = k.get_data()
-print q
+m = k.correlation_matrix(q)
+n = k.create_graph(m)
+print n
